@@ -1,0 +1,25 @@
+plugins {
+    // Sử dụng 'java-library' để các mô-đun khác có thể "thừa hưởng"
+    // các dependency của nó (nếu có)
+    id 'java-library'
+}
+
+group = 'com.gameserver'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    // Đặt phiên bản Java
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
+}
+
+dependencies {
+    // Hiện tại, 'common' không cần thư viện bên ngoài.
+    // Nếu bạn quyết định dùng JSON (ví dụ: GSON) để mã hóa/giải mã
+    // packet thay vì Java Serialization, bạn sẽ thêm nó vào đây.
+    // implementation 'com.google.code.gson:gson:2.10.1'
+}

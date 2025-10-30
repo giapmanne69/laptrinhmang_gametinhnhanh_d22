@@ -1,0 +1,56 @@
+// Khối plugins PHẢI là đầu tiên
+plugins {
+    id 'java'
+    // Plugin 'application' để giúp chúng ta dễ dàng chạy server
+    id 'application'
+}
+
+group = 'com.gameserver'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    // Cấu hình tương thích với JDK 24
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
+}
+
+// Chỉ định lớp Main để chạy server
+application {
+    mainClass = 'servergameserver.ServerApp'
+    
+    // Thêm JVM Args để sửa lỗi hiển thị tiếng Việt trên Console
+    applicationDefaultJvmArgs = ['-Dfile.encoding=UTF-8']
+}
+
+// Đảm bảo mã nguồn Java được biên dịch bằng UTF-8
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    // 1. Phụ thuộc vào mô-đun 'common' để lấy các lớp Packet, Model
+    implementation project(':common')
+
+    // 2. Netty
+    implementation 'io.netty:netty-all:4.1.100.Final'
+
+    // 3. Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.11'
+
+    // 4. THƯ VIỆN TÍNH TOÁN BIỂU THỨC (Cho ExpressionEvaluator)
+    // CẦN THIẾT cho code mới để thay thế ScriptEngine bị loại bỏ trong JDK 24
+    implementation 'net.objecthunter:exp4j:0.4.8'
+
+    // 5. Thư viện Database (MySQL Connector/J)
+    runtimeOnly 'mysql:mysql-connector-java:8.0.33'
+}
+
+// Cấu hình task 'run' của plugin 'application'
+run {
+    standardInput = System.in
+}

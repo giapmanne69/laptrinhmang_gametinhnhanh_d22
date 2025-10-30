@@ -1,0 +1,63 @@
+// Khối plugins PHẢI là đầu tiên
+plugins {
+    id 'java'
+    id 'application'
+    
+    // Su dung phien ban on dinh (settings.gradle se tim thay no)
+    id 'org.openjfx.javafxplugin' version '0.0.14' 
+}
+
+// group va version da duoc dinh nghia o tep goc (allprojects)
+
+repositories {
+    // Da duoc dinh nghia o tep goc
+}
+
+java {
+    // Cau hinh tuong thich voi JDK 24
+    sourceCompatibility = JavaVersion.VERSION_24
+    targetCompatibility = JavaVersion.VERSION_24
+}
+
+// Chi dinh lop Main de chay client
+application {
+    mainClass = 'clientgameserver.ClientApp'
+}
+
+// Khoi JAVAFX (Giữ lại để fix lỗi đỏ trong IDE)
+javafx {
+    version = "24.0.1" 
+    
+    // Khai bao cac mo-dun JavaFX can
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+// Tac vu RUN để chạy Client trong môi trường phát triển
+run {
+    // Su dung jvmArgs chuan de truyen tham so JVM 
+    jvmArgs = [
+        '--enable-native-access=javafx.graphics', 
+        '-Dfile.encoding=UTF-8'                    
+    ]
+    standardInput = System.in
+}
+
+
+// Dam bao ma nguon Java duoc bien dich bang UTF-8
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+dependencies {
+    // 1. Phu thuoc vao mo-dun 'common'
+    implementation project(':common')
+
+    // 2. Netty
+    implementation 'io.netty:netty-all:4.1.100.Final'
+
+    // 3. Logging
+    implementation 'org.slf4j:slf4j-api:2.0.9' 
+    runtimeOnly 'ch.qos.logback:logback-classic:1.4.11' 
+    
+    // 4. Cac thu vien JavaFX duoc plugin tu dong them
+}

@@ -1,0 +1,17 @@
+/* settings.gradle (Tệp Gốc) */
+
+pluginManagement {
+    repositories {
+        // Chỉ định cho Gradle tìm plugin tại Gradle Plugin Portal
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+// Tên dự án gốc của bạn
+rootProject.name = 'gameServer'
+
+// 3 mô-đun con
+include('common')
+include('server')
+include('client')
