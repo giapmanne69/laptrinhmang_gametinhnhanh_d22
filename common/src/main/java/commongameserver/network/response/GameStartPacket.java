@@ -7,66 +7,46 @@ import commongameserver.network.PacketType;
 import java.io.Serializable;
 
 /**
- * Gói tin được gửi TỪ SERVER -> CLIENT (cả hai người chơi)
- * khi trận đấu chính thức bắt đầu (sau khi cả hai đã đồng ý).
- *
- * Gói tin này chứa thông tin về đối thủ và
- * con số mục tiêu (target number) đầu tiên.
+ * Goi tin duoc gui TU SERVER -> CLIENT khi tran dau bat dau.
+ * (Da cap nhat de bao gom Dieu Kien (Constraint) cho cau hoi dau tien)
  */
 public class GameStartPacket extends Packet implements Serializable {
 
-    // Đảm bảo tính nhất quán khi serialize/deserialize
-    private static final long serialVersionUID = 204L; // ID cho GameStartPacket
+    private static final long serialVersionUID = 205L; // ID cho GameStartPacket
 
-    /**
-     * Thông tin của đối thủ (để client hiển thị tên, điểm, v.v.)
-     */
-    private User opponent;
-
-    /**
-     * Con số mục tiêu đầu tiên (trong dãy 30 số) mà người chơi cần đạt được.
-     */
-    private int firstTargetNumber;
-
-    /**
-     * Constructor rỗng
-     * Cần thiết cho việc deserialization.
-     */
-    public GameStartPacket() {
-    }
+    private final User opponent;
+    private final int firstTargetNumber;
+    private final String constraintDescription; // <-- DIEU KIEN MOI DUOC THEM
 
     /**
      * Constructor
-     * @param opponent Đối tượng User của đối thủ
-     * @param firstTargetNumber Số mục tiêu đầu tiên
+     * @param opponent Thong tin doi thu
+     * @param firstTargetNumber So muc tieu dau tien
+     * @param constraintDescription Mo ta dieu kien (vi du: "Phai dung 3 toan hang")
      */
-    public GameStartPacket(User opponent, int firstTargetNumber) {
+    public GameStartPacket(User opponent, int firstTargetNumber, String constraintDescription) {
         this.opponent = opponent;
         this.firstTargetNumber = firstTargetNumber;
+        this.constraintDescription = constraintDescription;
     }
 
-    // --- Getters và Setters ---
+    // --- Getters ---
 
     public User getOpponent() {
         return opponent;
-    }
-
-    public void setOpponent(User opponent) {
-        this.opponent = opponent;
     }
 
     public int getFirstTargetNumber() {
         return firstTargetNumber;
     }
 
-    public void setFirstTargetNumber(int firstTargetNumber) {
-        this.firstTargetNumber = firstTargetNumber;
+    /**
+     * Lay chuoi mo ta dieu kien cho cau hoi nay.
+     */
+    public String getConstraintDescription() {
+        return constraintDescription;
     }
 
-    /**
-     * Ghi đè phương thức getType() từ lớp Packet cơ sở.
-     * @return Loại gói tin là GAME_START_PACKET (theo yêu cầu của bạn)
-     */
     @Override
     public PacketType getType() {
         return PacketType.GAME_START_PACKET;
@@ -75,8 +55,9 @@ public class GameStartPacket extends Packet implements Serializable {
     @Override
     public String toString() {
         return "GameStartPacket{" +
-                "opponent=" + (opponent != null ? opponent.getUsername() : "null") +
+                "opponent=" + opponent.getUsername() +
                 ", firstTargetNumber=" + firstTargetNumber +
+                ", constraintDescription='" + constraintDescription + '\'' +
                 '}';
     }
 }

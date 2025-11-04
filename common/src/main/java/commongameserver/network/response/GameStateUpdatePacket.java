@@ -3,29 +3,37 @@ package commongameserver.network.response;
 import commongameserver.network.Packet;
 import commongameserver.network.PacketType;
 
+import java.io.Serializable;
+
 /**
- * Gói tin được Server gửi đến Client (người vừa trả lời)
- * để cập nhật trạng thái ván đấu.
- * Phiên bản này hỗ trợ logic "chơi độc lập".
+ * Goi tin duoc Server gui den Client (nguoi vua tra loi)
+ * de cap nhat trang thai van dau.
+ * (Da cap nhat de bao gom Dieu Kien (Constraint) cho cau hoi TIEP THEO)
  */
-public class GameStateUpdatePacket extends Packet {
+public class GameStateUpdatePacket extends Packet implements Serializable {
+
+    private static final long serialVersionUID = 206L; // ID cho GameStateUpdatePacket
 
     private final int yourScore;
     private final int opponentScore;
     private final int nextTargetNumber;
+    private final String nextConstraintDescription; // <-- DIEU KIEN MOI DUOC THEM
 
     /**
-     * Khởi tạo gói tin cập nhật trạng thái.
+     * Khoi tao goi tin cap nhat trang thai.
      *
-     * @param yourScore        Điểm số hiện tại của BẠN (người nhận gói tin).
-     * @param opponentScore    Điểm số hiện tại của ĐỐI THỦ.
-     * @param nextTargetNumber Số mục tiêu tiếp theo cho BẠN.
-     * (Gửi -1 nếu bạn đã hoàn thành 30 số).
+     * @param yourScore Diem so hien tai cua BAN (nguoi nhan goi tin).
+     * @param opponentScore Diem so hien tai cua DOI THU.
+     * @param nextTargetNumber So muc tieu tiep theo cho BAN.
+     * (Gui -1 neu ban da hoan thanh 30 so).
+     * @param nextConstraintDescription Mo ta dieu kien cho cau hoi tiep theo.
+     * (Gui null hoac "" neu da hoan thanh).
      */
-    public GameStateUpdatePacket(int yourScore, int opponentScore, int nextTargetNumber) {
+    public GameStateUpdatePacket(int yourScore, int opponentScore, int nextTargetNumber, String nextConstraintDescription) {
         this.yourScore = yourScore;
         this.opponentScore = opponentScore;
         this.nextTargetNumber = nextTargetNumber;
+        this.nextConstraintDescription = nextConstraintDescription;
     }
 
     public int getYourScore() {
@@ -40,6 +48,13 @@ public class GameStateUpdatePacket extends Packet {
         return nextTargetNumber;
     }
 
+    /**
+     * Lay chuoi mo ta dieu kien cho cau hoi TIEP THEO.
+     */
+    public String getNextConstraintDescription() {
+        return nextConstraintDescription;
+    }
+
     @Override
     public PacketType getType() {
         return PacketType.GAME_STATE_UPDATE_PACKET;
@@ -51,7 +66,7 @@ public class GameStateUpdatePacket extends Packet {
                 "yourScore=" + yourScore +
                 ", opponentScore=" + opponentScore +
                 ", nextTargetNumber=" + nextTargetNumber +
+                ", nextConstraintDescription='" + nextConstraintDescription + '\'' +
                 '}';
     }
 }
-

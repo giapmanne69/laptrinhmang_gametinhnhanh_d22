@@ -16,14 +16,19 @@ import java.sql.Statement;
  */
 public class DatabaseConnection {
 
-    // --- THAY THẾ CÁC GIÁ TRỊ NÀY ---
-    // Thay thế "your_game_db" bằng tên database của bạn
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/iot_database";
+    // (ĐÃ THÊM) Đổi "localhost" thành IP của máy chủ CSDL nếu chạy riêng
+    private static final String DB_HOST = "localhost"; 
+    
+    // Thay thế "iot_database" bằng tên CSDL game của bạn (ví dụ: "game_db")
+    private static final String DB_NAME = "iot_database"; 
+    
+    // (ĐÃ SỬA) Tạo URL động bằng cách sử dụng DB_HOST và DB_NAME
+    private static final String DB_URL = "jdbc:mysql://" + DB_HOST + ":3306/" + DB_NAME;
+    
     // Thay thế bằng tên người dùng CSDL của bạn
     private static final String DB_USER = "root";
     // Thay thế bằng mật khẩu CSDL của bạn
     private static final String DB_PASSWORD = "Giap200469@@@";
-    // ---
 
     /**
      * Tải trình điều khiển JDBC (Driver) chỉ một lần khi lớp được nạp.

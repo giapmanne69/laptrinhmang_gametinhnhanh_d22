@@ -82,12 +82,25 @@
                         <Font name="System Bold" size="48.0" />
                      </font>
                   </Label>
+                  
+                  <!-- ============================================= -->
+                  <!-- ===== THÊM LABEL ĐIỀU KIỆN (CONSTRAINT) ===== -->
+                  <Label fx:id="constraintLabel" text="Điều kiện: Đang tải..." textFill="#0066cc">
+                     <font>
+                        <Font name="System Italic" size="14.0" />
+                     </font>
+                     <VBox.margin>
+                        <Insets top="-5.0" />
+                     </VBox.margin>
+                  </Label>
+                  <!-- ============================================= -->
+                  
                   <Label fx:id="expressionLabel" style="-fx-border-color: #aaa; -fx-background-color: #fff; -fx-padding: 5;" text="Phép tính của bạn...">
                      <font>
                         <Font size="24.0" />
                      </font>
                      <VBox.margin>
-                        <Insets bottom="10.0" />
+                        <Insets bottom="10.0" top="10.0" />
                      </VBox.margin>
                   </Label>
                   
