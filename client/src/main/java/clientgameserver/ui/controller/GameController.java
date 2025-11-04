@@ -4,6 +4,8 @@ import clientgameserver.service.ClientNetworkService;
 import clientgameserver.ui.UIManager;
 import commongameserver.model.GameResult;
 import commongameserver.model.User;
+// THÊM IMPORT NÀY
+import commongameserver.network.request.LogoutRequest;
 import commongameserver.network.request.ExitGameRequest;
 import commongameserver.network.request.PlayAgainRequest;
 import commongameserver.network.request.SubmitAnswerRequest;
@@ -12,6 +14,9 @@ import commongameserver.network.response.GameStartPacket;
 import commongameserver.network.response.GameTimerPacket;
 import commongameserver.network.response.GameOverPacket;
 import commongameserver.network.response.ScoreUpdatePacket;
+import commongameserver.network.request.LeftGameOverScreenRequest;
+// Import OpponentLeftAfterGamePacket (de ham showOpponentLeftAfterGame hoat dong)
+import commongameserver.network.response.OpponentLeftAfterGamePacket;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -23,8 +28,8 @@ import javafx.scene.layout.AnchorPane;
 import java.util.Optional;
 
 /**
- * Controller cho màn hình game.fxml
- * (Đã CẬP NHẬT để hiển thị Điều Kiện Game)
+ * Controller cho man hinh game.fxml
+ * (DA CAP NHAT: Sua lai logic 'Ve Sanh' de kich hoat thong bao thoat)
  */
 public class GameController {
 
@@ -46,9 +51,7 @@ public class GameController {
     @FXML private Label opponentScoreLabel;
     @FXML private Label targetNumberLabel;
     @FXML private Label expressionLabel;
-    
-    // --- FXML BINDING MỚI ---
-    @FXML private Label constraintLabel; // Label để hiển thị điều kiện
+    @FXML private Label constraintLabel; // Da them o luot truoc
 
     // --- FXML Bindings (Game Over) ---
     @FXML private AnchorPane gameOverPane;
@@ -56,24 +59,19 @@ public class GameController {
     @FXML private Label finalScoreLabel;
     @FXML private Label playAgainStatusLabel;
 
-    // --- Trạng thái nội bộ ---
+    // --- Trang thai noi bo ---
     private StringBuilder currentExpression = new StringBuilder();
     private boolean waitingForPlayAgain = false; 
 
     /**
-     * Được gọi bởi UIManager khi game bắt đầu.
-     * (CẬP NHẬT: Hiển thị điều kiện đầu tiên)
+     * Duoc goi boi UIManager khi game bat dau.
      */
     public void initializeGame(GameStartPacket packet) {
         User opponent = packet.getOpponent();
         
         Platform.runLater(() -> {
-            // Reset UI
             targetNumberLabel.setText(String.valueOf(packet.getFirstTargetNumber()));
-            
-            // --- CẬP NHẬT ĐIỀU KIỆN ---
-            constraintLabel.setText(packet.getConstraintDescription()); // Hiển thị điều kiện
-            
+            constraintLabel.setText(packet.getConstraintDescription());
             opponentNameLabel.setText(opponent.getUsername());
             yourScoreLabel.setText("0"); 
             opponentScoreLabel.setText("0");
@@ -87,8 +85,7 @@ public class GameController {
         });
     }
 
-    // --- CÁC HÀM XỬ LÝ SỰ KIỆN FXML (onAction) ---
-    // (Các hàm onAction giữ nguyên)
+    // --- CAC HAM XU LY SU KIEN FXML (onAction) ---
 
     @FXML
     void handleNumberClick(ActionEvent event) {
@@ -109,10 +106,8 @@ public class GameController {
     @FXML
     void handleSubmitClick(ActionEvent event) {
         if (waitingForPlayAgain || currentExpression.length() == 0) return;
-        
         String finalExpression = currentExpression.toString().trim();
         ClientNetworkService.getInstance().sendPacket(new SubmitAnswerRequest(finalExpression));
-        
         clearExpression();
     }
 
@@ -124,61 +119,58 @@ public class GameController {
 
     @FXML
     void handleExitClick(ActionEvent event) {
+        // Thoat khi game DANG CHAY
         ClientNetworkService.getInstance().sendPacket(new ExitGameRequest());
+        UIManager.getInstance().showLobbyScreen(UIManager.getInstance().getCurrentUser());
+    }
+
+    /**
+     * (DA SUA) Xu ly khi bam nut "Ve Sanh" (khi game DA KET THUC).
+     * Chung ta gui LogoutRequest de kich hoat logic don dep
+     * handleDisconnect ben phia Server (va gui OpponentLeftAfterGamePacket).
+     */
+    @FXML
+    void handleExitToLobbyClick(ActionEvent event) {
+        // --- SUA O DAY ---
+        // Gui LogoutRequest (thay vi ExitGameRequest)
+        ClientNetworkService.getInstance().sendPacket(new LeftGameOverScreenRequest()); 
+        // --- KET THUC SUA ---
+        
+        // Quay ve sanh
         UIManager.getInstance().showLobbyScreen(UIManager.getInstance().getCurrentUser());
     }
 
     @FXML
     void handlePlayAgainClick(ActionEvent event) {
-        updatePlayAgainStatus("Đã gửi yêu cầu. Đang chờ đối thủ...");
+        updatePlayAgainStatus("Da gui yeu cau. Dang cho doi thu...");
         waitingForPlayAgain = true; 
         ClientNetworkService.getInstance().sendPacket(new PlayAgainRequest());
     }
-
-    @FXML
-    void handleExitToLobbyClick(ActionEvent event) {
-        // Gửi ExitGameRequest để Server dọn dẹp
-        ClientNetworkService.getInstance().sendPacket(new ExitGameRequest());
-        UIManager.getInstance().showLobbyScreen(UIManager.getInstance().getCurrentUser());
-    }
     
-    // --- CÁC HÀM ĐƯỢC GỌI BỞI CLIENTHANDLER (LUỒNG NETTY) ---
+    // --- CAC HAM DUOC GOI BOI CLIENTHANDLER (LUONG NETTY) ---
 
-    /**
-     * Cập nhật điểm số và số mục tiêu mới (Cho người vừa trả lời).
-     * (CẬP NHẬT: Hiển thị điều kiện tiếp theo)
-     */
     public void updateState(GameStateUpdatePacket packet) {
         Platform.runLater(() -> {
             yourScoreLabel.setText(String.valueOf(packet.getYourScore()));
             opponentScoreLabel.setText(String.valueOf(packet.getOpponentScore()));
             
-            // Cập nhật số mục tiêu
             if (packet.getNextTargetNumber() == -1) {
-                targetNumberLabel.setText("ĐÃ XONG!");
-                constraintLabel.setText("Chúc mừng bạn đã hoàn thành!"); // Thông báo hoàn thành
+                targetNumberLabel.setText("DA XONG!");
+                constraintLabel.setText("Chuc mung ban da hoan thanh!");
             } else {
                 targetNumberLabel.setText(String.valueOf(packet.getNextTargetNumber()));
-                // --- CẬP NHẬT ĐIỀU KIỆN ---
-                constraintLabel.setText(packet.getNextConstraintDescription()); // Hiển thị điều kiện MỚI
+                constraintLabel.setText(packet.getNextConstraintDescription());
             }
         });
     }
     
-    /**
-     * Cập nhật điểm số khi đối thủ trả lời.
-     */
     public void updateScoreOnly(ScoreUpdatePacket packet) {
         Platform.runLater(() -> {
             yourScoreLabel.setText(String.valueOf(packet.getMyScore()));
             opponentScoreLabel.setText(String.valueOf(packet.getOpponentScore()));
-            // Không cập nhật điều kiện ở đây
         });
     }
 
-    /**
-     * Cập nhật đồng hồ.
-     */
     public void updateTimer(GameTimerPacket packet) {
         Platform.runLater(() -> {
             int seconds = packet.getRemainingTimeInSeconds();
@@ -186,18 +178,15 @@ public class GameController {
         });
     }
 
-    /**
-     * Hiển thị màn hình Game Over.
-     */
     public void showGameOver(GameOverPacket packet) {
         Platform.runLater(() -> {
             GameResult result = packet.getGameResult();
             String myId = UIManager.getInstance().getCurrentUser().getId();
             String winnerText;
             
-            if (result.getWinnerId() == null) { winnerText = "HÒA!"; } 
-            else if (result.getWinnerId().equals(myId)) { winnerText = "BẠN THẮNG!"; } 
-            else { winnerText = "BẠN THUA!"; }
+            if (result.getWinnerId() == null) { winnerText = "HOA!"; } 
+            else if (result.getWinnerId().equals(myId)) { winnerText = "BAN THANG!"; } 
+            else { winnerText = "BAN THUA!"; }
 
             winnerLabel.setText(winnerText);
             
@@ -205,32 +194,60 @@ public class GameController {
             int myFinalScore = iAmPlayer1 ? result.getPlayer1Score() : result.getPlayer2Score();
             int opponentFinalScore = iAmPlayer1 ? result.getPlayer2Score() : result.getPlayer1Score();
             
-            finalScoreLabel.setText(String.format("Tỉ số: %d - %d", myFinalScore, opponentFinalScore));
+            finalScoreLabel.setText(String.format("Ti so: %d - %d", myFinalScore, opponentFinalScore));
             
+            playAgainStatusLabel.setText(""); 
             gameOverPane.setVisible(true);
             waitingForPlayAgain = true; 
         });
     }
 
     /**
-     * Hiển thị thông báo đối thủ thoát.
+     * (GIU NGUYEN) Xu ly khi doi thu thoat (DANG TRONG TRAN DAU).
      */
     public void showOpponentLeft() {
         Platform.runLater(() -> {
             if (!gameOverPane.isVisible()) { 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Đối thủ đã thoát");
-                alert.setHeaderText("Đối thủ của bạn đã thoát trận.");
-                alert.setContentText("Bạn được xử thắng. Trở về sảnh.");
+                alert.setTitle("Doi thu da thoat tran");
+                alert.getButtonTypes().setAll(ButtonType.OK); 
+                alert.setHeaderText("Doi thu cua ban da thoat khoi tran dau.");
+                alert.setContentText("Ban duoc xu thang. Tro ve sanh.");
+                
+                alert.showAndWait();
+                UIManager.getInstance().showLobbyScreen(UIManager.getInstance().getCurrentUser());
+            } 
+        });
+    }
+
+    /**
+     * (HAM MOI) Xu ly khi doi thu thoat (SAU KHI TRAN DAU KET THUC).
+     * Duoc goi khi nhan OpponentLeftAfterGamePacket.
+     */
+    public void showOpponentLeftAfterGame(String opponentUsername) {
+        Platform.runLater(() -> {
+            // Chi hien thi neu dang o man hinh Game Over
+            if (gameOverPane.isVisible()) { 
+                
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Doi thu da thoat");
+                alert.getButtonTypes().setAll(ButtonType.OK); // Chi co nut OK
+                
+                // Hien thi thong bao nhu ban yeu cau
+                alert.setHeaderText("Nguoi choi '" + opponentUsername + "' da thoat.");
+                alert.setContentText("Quay ve sanh chinh.");
+                
+                // Cho nguoi dung bam OK
                 alert.showAndWait();
                 
+                // Quay ve sanh
                 UIManager.getInstance().showLobbyScreen(UIManager.getInstance().getCurrentUser());
             }
         });
     }
-    
-    // --- Các hàm xử lý Play Again ---
 
+    // --- Cac ham xu ly Play Again ---
+    
     public void updatePlayAgainStatus(String message) {
         Platform.runLater(() -> {
             if (gameOverPane.isVisible()) {
@@ -243,27 +260,27 @@ public class GameController {
         Platform.runLater(() -> {
             if (gameOverPane.isVisible() && !waitingForPlayAgain) { 
                  Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                 alert.setTitle("Mời Chơi Lại");
-                 alert.setHeaderText(requesterUsername + " muốn chơi lại với bạn.");
-                 alert.setContentText("Bạn có đồng ý không?");
-                 ButtonType okButton = new ButtonType("Đồng ý");
-                 ButtonType noButton = new ButtonType("Từ chối");
+                 alert.setTitle("Moi Choi Lai");
+                 alert.setHeaderText(requesterUsername + " muon choi lai voi ban.");
+                 alert.setContentText("Ban co dong y khong?");
+                 ButtonType okButton = new ButtonType("Dong y");
+                 ButtonType noButton = new ButtonType("Tu choi");
                  alert.getButtonTypes().setAll(okButton, noButton);
 
                  Optional<ButtonType> result = alert.showAndWait();
                  
                  if (result.isPresent() && result.get() == okButton) {
-                     updatePlayAgainStatus("Đã chấp nhận. Đang chờ đối thủ...");
+                     updatePlayAgainStatus("Da chap nhan. Dang cho Server...");
                      ClientNetworkService.getInstance().sendPacket(new PlayAgainRequest());
                      waitingForPlayAgain = true; 
                  } 
             } else if (gameOverPane.isVisible() && waitingForPlayAgain) {
-                 updatePlayAgainStatus("Đối phương cũng đồng ý. Đang chờ Server...");
+                 updatePlayAgainStatus("Doi phuong cung dong y. Dang cho Server...");
             }
         });
     }
     
-    // --- Tiện ích ---
+    // --- Tien ich ---
     private void updateExpressionLabel() {
         if (currentExpression.length() == 0) {
             expressionLabel.setText("..."); 

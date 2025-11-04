@@ -97,11 +97,12 @@ public class UserService {
      * Xử lý khi ngắt kết nối.
      */
     public void handleDisconnect(Channel channel) {
-        User user = connManager.removeUser(channel);
+        User user = connManager.getUser(channel);
 
         if (user != null) {
             System.out.println("UserService: " + user.getUsername() + " đã ngắt kết nối.");
             lobbyService.handleUserDisconnect(user, channel);
+            connManager.removeUser(channel);
         }
     }
 }

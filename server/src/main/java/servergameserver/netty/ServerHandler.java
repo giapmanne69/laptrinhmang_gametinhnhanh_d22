@@ -7,6 +7,7 @@ import commongameserver.network.request.ChallengeRequest;
 import commongameserver.network.request.ChallengeResponse;
 import commongameserver.network.request.LoginRequest;
 import commongameserver.network.request.SubmitAnswerRequest;
+import commongameserver.network.request.LeftGameOverScreenRequest; 
 import commongameserver.network.request.LogoutRequest;
 import commongameserver.network.request.RequestOnlineListPacket; 
 import io.netty.channel.ChannelHandler;
@@ -86,6 +87,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<Packet> {
                 List<User> sortedLeaderboard = leaderboardService.getLeaderboard();
                 LeaderboardPacket leaderboardPacket = new LeaderboardPacket(sortedLeaderboard);
                 ctx.channel().writeAndFlush(leaderboardPacket);
+                break;
+            case LEFT_GAME_OVER_SCREEN_REQUEST:
+                // Khong ngat ket noi user, chi don dep logic Play Again
+                lobbyService.handleLeftGameOverScreen(ctx.channel());
                 break;
             default:
                 // LOG CHẨN ĐOÁN: Bất kỳ gói tin nào không xử lý được

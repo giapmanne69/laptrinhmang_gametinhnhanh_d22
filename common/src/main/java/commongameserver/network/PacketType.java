@@ -15,10 +15,13 @@ public enum PacketType implements Serializable {
     CHALLENGE_RESPONSE,
     SUBMIT_ANSWER_REQUEST,
     PLAY_AGAIN_REQUEST,
-    EXIT_GAME_REQUEST,
+    EXIT_GAME_REQUEST, // (Dùng khi đang trong trận)
     REQUEST_LEADERBOARD_REQUEST,
-    LOGOUT_REQUEST,
+    LOGOUT_REQUEST, // (Dùng khi đăng xuất/thoát game)
     REQUEST_ONLINE_LIST,
+    
+    // --- (MOI) GÓI TIN THOÁT MÀN HÌNH GAME OVER ---
+    LEFT_GAME_OVER_SCREEN_REQUEST,
 
     // === Server -> Client (Responses/Packets) ===
     SCORE_UPDATE_PACKET,
@@ -30,12 +33,14 @@ public enum PacketType implements Serializable {
     GAME_STATE_UPDATE_PACKET,
     GAME_TIMER_PACKET,
     GAME_OVER_PACKET,
-    OPPONENT_EXIT_PACKET,
+    OPPONENT_EXIT_PACKET, // (Dùng khi đối thủ thoát GIỮA TRẬN)
     LEADERBOARD_PACKET,
-    PLAY_AGAIN_STATUS,      // <-- ĐÃ THÊM: Trạng thái chờ chơi lại
-    PLAY_AGAIN_INVITATION,  // <-- ĐÃ THÊM: Lời mời chơi lại
-    USER_UPDATE_PACKET,
+    PLAY_AGAIN_STATUS,
+    PLAY_AGAIN_INVITATION,
     
-    ERROR_PACKET // Gói tin lỗi chung
+    // (MOI) GÓI TIN THÔNG BÁO THOÁT SAU GAME
+    OPPONENT_LEFT_AFTER_GAME,
+    
+    USER_UPDATE_PACKET,
+    ERROR_PACKET 
 }
-
